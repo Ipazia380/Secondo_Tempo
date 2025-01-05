@@ -38,7 +38,7 @@ const MenuSection = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name">Nome del Piatto</Label>
-                <Input id="name" placeholder="es. Margherita" />
+                <Input id="name" placeholder="es. Margheritaaaa" />
               </div>
               <div>
                 <Label htmlFor="category">Categoria</Label>
@@ -144,7 +144,7 @@ const OrdersSection = () => {
                   <div className="h-[200px] overflow-y-auto border rounded-md p-2">
                     {/* Lista piatti selezionabili */}
                     <div className="space-y-2">
-                      {['Margherita', 'Marinara', 'Diavola'].map((dish) => (
+                      {['Margheritaaaa', 'Marinara', 'Diavola'].map((dish) => (
                         <div key={dish} className="flex items-center justify-between p-2 hover:bg-accent rounded-md">
                           <span>{dish}</span>
                           <Button variant="ghost" size="sm">
