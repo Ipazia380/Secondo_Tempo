@@ -13,10 +13,38 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Calendar as CalendarComponent } from "../../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form";
+import { useForm } from 'react-hook-form';
+import { useMenu } from '../../hooks/useMenu';
+import { useReservations } from '../../hooks/useReservations';
+import { toast } from 'react-toastify';
 
 // Componenti per le diverse sezioni
 const MenuSection = () => {
   const [isAddDishOpen, setIsAddDishOpen] = useState(false);
+  const { dishes, isLoading, addDish } = useMenu();
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      category: '',
+      ingredients: '',
+      price: '',
+    },
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      await addDish.mutateAsync(data);
+      setIsAddDishOpen(false);
+      form.reset();
+      toast.success('Piatto aggiunto con successo!');
+    } catch (error) {
+      toast.error('Errore durante l\'aggiunta del piatto');
+    }
+  };
+
+  if (isLoading) {
+    return <div>Caricamento menu...</div>;
+  }
 
   return (
     <div className="p-6">
@@ -61,7 +89,7 @@ const MenuSection = () => {
                 <Label htmlFor="price">Prezzo</Label>
                 <Input id="price" type="number" step="0.01" placeholder="0.00" />
               </div>
-              <Button className="w-full">Salva Piatto</Button>
+              <Button className="w-full" onClick={form.handleSubmit(onSubmit)}>Salva Piatto</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -322,12 +350,38 @@ const InventorySection = () => {
 
 const ReservationsSection = () => {
   const [isAddReservationOpen, setIsAddReservationOpen] = useState(false);
-  const [date, setDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { getReservations, addReservation } = useReservations();
+  const { data: reservations, isLoading } = getReservations(selectedDate);
+  const form = useForm({
+    defaultValues: {
+      customerName: '',
+      date: new Date(),
+      time: '',
+      guests: '',
+      notes: '',
+    },
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      await addReservation.mutateAsync(data);
+      setIsAddReservationOpen(false);
+      form.reset();
+      toast.success('Prenotazione aggiunta con successo!');
+    } catch (error) {
+      toast.error('Errore durante l\'aggiunta della prenotazione');
+    }
+  };
+
+  if (isLoading) {
+    return <div>Caricamento prenotazioni...</div>;
+  }
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Prenotazioniciao</h2>
+        <h2 className="text-2xl font-bold">Prenotazioni</h2>
         <Dialog open={isAddReservationOpen} onOpenChange={setIsAddReservationOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -351,14 +405,14 @@ const ReservationsSection = () => {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
-                      {date ? date.toLocaleDateString() : "Seleziona data"}
+                      {selectedDate ? selectedDate.toLocaleDateString() : "Seleziona data"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <CalendarComponent
                       mode="single"
-                      selected={date}
-                      onSelect={setDate}
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
                       initialFocus
                     />
                   </PopoverContent>
@@ -385,7 +439,7 @@ const ReservationsSection = () => {
                 <Label htmlFor="notes">Note</Label>
                 <Textarea id="notes" placeholder="Eventuali richieste speciali..." />
               </div>
-              <Button className="w-full">Conferma Prenotazione</Button>
+              <Button className="w-full" onClick={form.handleSubmit(onSubmit)}>Conferma Prenotazione</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -395,13 +449,10 @@ const ReservationsSection = () => {
         <Card>
           <CardContent className="p-4">
             <div className="space-y-4">
-              {[
-                { name: 'Mario Rossi', time: '20:00', guests: 4 },
-                { name: 'Luigi Verdi', time: '20:30', guests: 2 },
-              ].map((reservation, index) => (
+              {reservations.map((reservation, index) => (
                 <div key={index} className="flex justify-between items-center">
                   <div>
-                    <h4 className="font-medium">{reservation.name}</h4>
+                    <h4 className="font-medium">{reservation.customerName}</h4>
                     <p className="text-sm text-gray-600">
                       {reservation.time} - {reservation.guests} persone
                     </p>
