@@ -17,9 +17,11 @@ import { useReservations } from '@/hooks/use-reservations';
 import { toast } from 'sonner';
 import { Menu, Home, Calendar as CalendarIcon, ClipboardList, Package2, Users } from 'lucide-react';
 import { Card, CardContent } from "../../components/ui/card";
+import { useTheme } from 'next-themes';
 
 export default function RestaurantApp() {
   const [activeSection, setActiveSection] = useState('menu');
+  const { theme, setTheme } = useTheme();
 
   const sidebarItems = [
     { id: 'menu', label: 'Menu', icon: Menu },
@@ -52,6 +54,9 @@ export default function RestaurantApp() {
       <div className="w-64 bg-white shadow-lg">
         <div className="p-4">
           <h1 className="text-xl font-bold text-gray-800">Secondo Tempo</h1>
+          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="mt-2 p-2 bg-blue-500 text-white rounded">
+            Cambia Tema
+          </button>
         </div>
         <nav className="mt-4">
           {sidebarItems.map((item) => {
@@ -313,7 +318,7 @@ function OrdersSection() {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <p>2x Margheritaaa</p>
+                <p>2x Margheritaaaa</p>
                 <div className="space-x-2">
                   <Button variant="outline" size="sm">Modifica</Button>
                   <Button variant="destructive" size="sm">Elimina</Button>
