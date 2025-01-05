@@ -171,7 +171,7 @@ const OrdersSection = () => {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <p>2x Margherita</p>
+                <p>2x Margheritaaa</p>
                 <div className="space-x-2">
                   <Button variant="outline" size="sm">Modifica</Button>
                   <Button variant="destructive" size="sm">Elimina</Button>
@@ -327,7 +327,7 @@ const ReservationsSection = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Prenotazioni</h2>
+        <h2 className="text-2xl font-bold">Prenotazioniciao</h2>
         <Dialog open={isAddReservationOpen} onOpenChange={setIsAddReservationOpen}>
           <DialogTrigger asChild>
             <Button>
