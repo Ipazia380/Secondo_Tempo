@@ -1,27 +1,102 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Menu, X, Home, BookOpen, ShoppingCart, Store, Package, Calendar, Plus, Search } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from "../../components/ui/button";
-import { Card, CardContent } from "../../components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { Calendar as CalendarComponent } from "../../components/ui/calendar";
+import { Calendar } from "../../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form";
 import { useForm } from 'react-hook-form';
-import { useMenu } from '../../hooks/useMenu';
-import { useReservations } from '../../hooks/useReservations';
-import { toast } from 'react-toastify';
+import { useMenu } from '@/hooks/use-menu';
+import { useReservations } from '@/hooks/use-reservations';
+import { toast } from 'sonner';
+import { Menu, Home, Calendar as CalendarIcon, ClipboardList, Package2, Users } from 'lucide-react';
+import { Card, CardContent } from "../../components/ui/card";
 
-// Componenti per le diverse sezioni
-const MenuSection = () => {
+export default function RestaurantApp() {
+  const [activeSection, setActiveSection] = useState('menu');
+
+  const sidebarItems = [
+    { id: 'menu', label: 'Menu', icon: Menu },
+    { id: 'orders', label: 'Ordini', icon: ClipboardList },
+    { id: 'tables', label: 'Tavoli', icon: Home },
+    { id: 'inventory', label: 'Inventario', icon: Package2 },
+    { id: 'reservations', label: 'Prenotazioni', icon: CalendarIcon },
+  ];
+
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'menu':
+        return <MenuSection />;
+      case 'orders':
+        return <OrdersSection />;
+      case 'tables':
+        return <TablesSection />;
+      case 'inventory':
+        return <InventorySection />;
+      case 'reservations':
+        return <ReservationsSection />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-lg">
+        <div className="p-4">
+          <h1 className="text-xl font-bold text-gray-800">Secondo Tempo</h1>
+        </div>
+        <nav className="mt-4">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={\`flex items-center w-full px-6 py-3 text-left \${
+                  activeSection === item.id
+                    ? 'bg-gray-100 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }\`}
+              >
+                <Icon className="w-5 h-5 mr-3" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {renderSection()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MenuSection() {
   const [isAddDishOpen, setIsAddDishOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('antipasti');
   const { dishes, isLoading, addDish } = useMenu();
+
+  const categories = [
+    { id: 'antipasti', label: 'Antipasti' },
+    { id: 'primi', label: 'Primi' },
+    { id: 'secondi', label: 'Secondi' },
+    { id: 'contorni', label: 'Contorni' },
+    { id: 'dolci', label: 'Dolci' },
+  ];
+
   const form = useForm({
     defaultValues: {
       name: '',
@@ -47,91 +122,130 @@ const MenuSection = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Menu</h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Menu</h2>
         <Dialog open={isAddDishOpen} onOpenChange={setIsAddDishOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" /> Aggiungi Piatto
+              Aggiungi Piatto
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Aggiungi Nuovo Piatto</DialogTitle>
-              <DialogDescription>
-                Inserisci i dettagli del nuovo piatto da aggiungere al menu.
-              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nome del Piatto</Label>
-                <Input id="name" placeholder="es. Margheritaaaa" />
-              </div>
-              <div>
-                <Label htmlFor="category">Categoria</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['Entrée', 'Antipasti', 'Primi', 'Secondi', 'Dessert'].map((cat) => (
-                      <SelectItem key={cat} value={cat.toLowerCase()}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="ingredients">Ingredienti</Label>
-                <Textarea id="ingredients" placeholder="Inserisci gli ingredienti" />
-              </div>
-              <div>
-                <Label htmlFor="price">Prezzo</Label>
-                <Input id="price" type="number" step="0.01" placeholder="0.00" />
-              </div>
-              <Button className="w-full" onClick={form.handleSubmit(onSubmit)}>Salva Piatto</Button>
-            </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome del Piatto</FormLabel>
+                      <FormControl>
+                        <Input placeholder="es. Margherita" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleziona categoria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="ingredients"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ingredienti</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Inserisci gli ingredienti..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prezzo</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full">Salva Piatto</Button>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Tabs defaultValue="antipasti">
-        <TabsList className="w-full justify-start">
-          {['Entrée', 'Antipasti', 'Primi', 'Secondi', 'Dessert'].map((category) => (
-            <TabsTrigger key={category} value={category.toLowerCase()}>
-              {category}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          {categories.map((category) => (
+            <TabsTrigger key={category.id} value={category.id}>
+              {category.label}
             </TabsTrigger>
           ))}
         </TabsList>
-        {['Entrée', 'Antipasti', 'Primi', 'Secondi', 'Dessert'].map((category) => (
-          <TabsContent key={category} value={category.toLowerCase()}>
-            <Card>
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-medium">Nome Piatto</h4>
-                      <p className="text-sm text-gray-600">Ingredienti: pomodoro, mozzarella, basilico</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">€10.00</p>
-                      <div className="space-x-2">
-                        <Button variant="outline" size="sm">Modifica</Button>
-                        <Button variant="destructive" size="sm">Elimina</Button>
+        {categories.map((category) => (
+          <TabsContent key={category.id} value={category.id}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {dishes
+                .filter((dish) => dish.category === category.id)
+                .map((dish, index) => (
+                  <Card key={index}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{dish.name}</h3>
+                          <p className="text-sm text-gray-600">{dish.ingredients}</p>
+                          <p className="mt-2 font-medium">€{dish.price}</p>
+                        </div>
+                        <div className="space-x-2">
+                          <Button variant="outline" size="sm">Modifica</Button>
+                          <Button variant="destructive" size="sm">Elimina</Button>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
           </TabsContent>
         ))}
       </Tabs>
     </div>
   );
-};
+}
 
-const OrdersSection = () => {
+function OrdersSection() {
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
 
   return (
@@ -211,9 +325,9 @@ const OrdersSection = () => {
       </div>
     </div>
   );
-};
+}
 
-const TablesSection = () => {
+function TablesSection() {
   const [isAddTableOpen, setIsAddTableOpen] = useState(false);
 
   return (
@@ -274,9 +388,9 @@ const TablesSection = () => {
       </div>
     </div>
   );
-};
+}
 
-const InventorySection = () => {
+function InventorySection() {
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
 
   return (
@@ -346,9 +460,9 @@ const InventorySection = () => {
       </div>
     </div>
   );
-};
+}
 
-const ReservationsSection = () => {
+function ReservationsSection() {
   const [isAddReservationOpen, setIsAddReservationOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { getReservations, addReservation } = useReservations();
@@ -409,7 +523,7 @@ const ReservationsSection = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <CalendarComponent
+                    <Calendar
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
@@ -469,69 +583,4 @@ const ReservationsSection = () => {
       </div>
     </div>
   );
-};
-
-const App = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('menu');
-
-  const navigation = [
-    { name: 'Menu', icon: BookOpen, section: 'menu' },
-    { name: 'Ordini', icon: ShoppingCart, section: 'orders' },
-    { name: 'Sale', icon: Store, section: 'tables' },
-    { name: 'Inventario', icon: Package, section: 'inventory' },
-    { name: 'Prenotazioni', icon: Calendar, section: 'reservations' },
-  ];
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Sidebar per dispositivi mobili */}
-      <div className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSidebarOpen(false)} />
-
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 w-64 bg-card transform transition-transform lg:transform-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-16 flex items-center justify-between px-4 border-b">
-          <h1 className="text-xl font-bold">Secondo Tempo</h1>
-          <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        <nav className="p-4 space-y-2">
-          {navigation.map((item) => (
-            <Button
-              key={item.section}
-              variant={activeSection === item.section ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => {
-                setActiveSection(item.section);
-                setIsSidebarOpen(false);
-              }}
-            >
-              <item.icon className="mr-2 h-5 w-5" />
-              {item.name}
-            </Button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Contenuto principale */}
-      <div className="lg:pl-64">
-        <div className="h-16 flex items-center px-4 border-b lg:justify-end">
-          <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <main>
-          {activeSection === 'menu' && <MenuSection />}
-          {activeSection === 'orders' && <OrdersSection />}
-          {activeSection === 'tables' && <TablesSection />}
-          {activeSection === 'inventory' && <InventorySection />}
-          {activeSection === 'reservations' && <ReservationsSection />}
-        </main>
-      </div>
-    </div>
-  );
-};
-
-export default App;
+}
